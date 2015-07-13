@@ -39,9 +39,9 @@
                 interval: interval,
                 'meta-info': {
                     'git': {
-                        'owner': $('#owner').val(),
-                        'repo': $('#repo').val(),
-                        'ref': $('#ref').val()
+                        'owner': $('#scm-owner').val(),
+                        'repo': $('#scm-repo').val(),
+                        'ref': $('#scm-ref').val()
                     }
                 },
                 'program-name': $('#program-name').val()
@@ -152,18 +152,18 @@
                 <input id="scm-owner" type="text" placeholder="e.g. totem"
                        class="form-control"/>
             </div>
-            <label for="scm-repository" class="col-sm-2 control-label">SCM
+            <label for="scm-repo" class="col-sm-2 control-label">SCM
                 Repository:</label>
 
             <div class="col-sm-2">
-                <input id="scm-repository" type="text"
+                <input id="scm-repo" type="text"
                        placeholder="e.g. cluster-deployer" class="form-control"/>
             </div>
-            <label for="scm-branch" class="col-sm-2 control-label">SCM
+            <label for="scm-ref" class="col-sm-2 control-label">SCM
                 Branch:</label>
 
             <div class="col-sm-2">
-                <input id="scm-branch" type="text" placeholder="e.g. master"
+                <input id="scm-ref" type="text" placeholder="e.g. master"
                        class="form-control"/>
             </div>
         </div>
