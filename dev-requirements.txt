@@ -1,0 +1,9 @@
+nose==1.3.4
+mock==1.0.1
+flake8
+
+# For freezing time
+freezegun==0.2.8
+
+# Code Coverage
+coveralls
