@@ -14,4 +14,4 @@ EXPOSE 9500
 WORKDIR /opt/totem-logs
 
 ENTRYPOINT ["/usr/local/bin/gunicorn"]
-CMD ["-b","0.0.0.0:9500","--worker-class", "socketio.sgunicorn.GeventSocketIOWorker","totemlogs.server:app"]
+CMD ["-b","0.0.0.0:9500","-k", "flask_sockets.worker","totemlogs.server:app"]

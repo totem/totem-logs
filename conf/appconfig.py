@@ -42,7 +42,7 @@ DOC_TYPE_EVENTS = 'events'
 
 LOG_REQUEST_DEFAULTS = {
     'interval': 5,
-    'from-date': None,
+    'after-date': None,
     'meta-info': {
         'git': {
             'owner': '*',

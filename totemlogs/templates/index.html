@@ -5,7 +5,7 @@
     <script type="text/javascript"
             src="//code.jquery.com/jquery-2.1.4.min.js"></script>
     <script type="text/javascript"
-            src="//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
+            src="//cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.js"></script>
 
     <!-- Bootstrap -->
     <link rel="stylesheet"
@@ -15,10 +15,9 @@
     <!-- Latest compiled and minified JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
     <script type="text/javascript" charset="utf-8">
-        var socket = null;
         var namespace = '/logs'; // change to an empty string to use the global namespace
         var afterDate = '';
-        var socket = null;
+        var ws = null;
         var running = false;
         var maxLines = 1000;
         var interval = 5;
@@ -27,14 +26,52 @@
             $('#btn_disconnect').attr('disabled', true);
             $('#btn_start').attr('disabled', false);
             running = false;
-            if (stop && socket) {
-                socket.emit('stop');
+            if (stop && ws) {
+                ws.close();
             }
             return false;
         }
 
+        function init() {
+            ws = new WebSocket('ws://' + document.domain + ':' + location.port + namespace)
+            ws.onopen = function (event) {
+                fetch();
+            };
+
+            ws.onmessage = function(event) {
+                var parsedEvent = JSON.parse(event.data);
+                switch(parsedEvent.type) {
+                    case 'LOGS':
+                        var logsPanel = $('#logs');
+
+                        parsedEvent.details.logs.forEach(function (log) {
+                            afterDate = log.timestamp || afterDate;
+                            logsPanel.append('<pre>' + log.message + '</pre>');
+                            var lines = $('#logs pre');
+                            if (lines.size() > maxLines) {
+                                lines.slice(0, lines.size() - maxLines).remove();
+                            }
+                            logsPanel.scrollTop(logsPanel.prop('scrollHeight'));
+                        });
+                        break;
+
+                    case 'FAILED':
+                        disconnect(false); //Do not break yet.  Let it go to default
+
+                    default:
+                        $('#status').html('<div>' + parsedEvent.description + '</div>');
+
+                }
+
+            };
+
+            ws.onclose = function(event){
+                disconnect(false);
+            };
+        }
+
         function fetch() {
-            socket.emit('fetch', {
+            msg = JSON.stringify({
                 'after-date': afterDate,
                 interval: interval,
                 'meta-info': {
@@ -46,55 +83,25 @@
                 },
                 'program-name': $('#program-name').val()
             });
+            $('#status').html('<div>' + msg + '</div>');
+            ws.send(msg);
         }
 
         $(document).ready(function () {
 
-            socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
-
-
             // the socket.io documentation recommends sending an explicit package upon connection
             // this is specially important when using the global namespace
-            socket.on('connect', function () {
-                if (running) {
-                    fetch();
-                }
-            });
+
 
             $('#btn_start').click(function (event) {
-                running = true;
+                if (running) {
+                    return;
+                }
+                init();
                 $('#logs').html('');
                 $('#btn_disconnect').attr('disabled', false);
                 $('#btn_start').attr('disabled', true);
                 afterDate = $('#after-date').val();
-                fetch();
-                return false;
-            });
-
-            socket.on('status', function (status) {
-                console.log(status);
-                $('#status').html('<div>' + status.description + '</div>');
-                if (status['type'] === 'FAILED') {
-                    disconnect(false);
-                }
-            });
-
-            // event handler for server sent data
-            // the data is displayed in the "Received" section of the page
-            socket.on('logs', function (logs) {
-                var logsPanel = $('#logs');
-
-                logs.forEach(function (log) {
-                    afterDate = log.timestamp || afterDate;
-                    logsPanel.append('<pre>' + log.message + '</pre>');
-                    var lines = $('#logs pre');
-                    if (lines.size() > maxLines) {
-                        lines.slice(0, lines.size() - maxLines).remove();
-                    }
-                    logsPanel.scrollTop(logsPanel.prop('scrollHeight'));
-                });
-
-
             });
 
             $('#btn_disconnect').click(function (event) {

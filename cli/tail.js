@@ -2,7 +2,7 @@
 'use strict';
 
 var ArgumentParser = require('argparse').ArgumentParser;
-var io = require('socket.io-client')
+var WebSocket = require('ws');
 
 var parser = new ArgumentParser({
   version: '0.0.1',
@@ -47,13 +47,32 @@ parser.addArgument(
 );
 var args = parser.parseArgs();
 
-var baseUrl = args.url || 'http://localhost:9500'
+var baseUrl = args.url || 'ws://localhost:9500'
 console.log('Connecting to log service at ' +baseUrl+'/logs');
 
-var socket = io.connect(baseUrl+'/logs');
+var ws = new WebSocket(baseUrl+'/logs');
 
-socket.on('connect', function () {
-  socket.emit('fetch', {
+ws.on('message', function(event) {
+  var parsedEvent = JSON.parse(event);
+  switch (parsedEvent.type) {
+    case 'LOGS':
+      parsedEvent.details.logs.forEach(function (log) {
+        console.log(log.message);
+      });
+      break;
+
+    case 'FAILED':
+      console.log(parsedEvent.description);
+      process.exit(1);
+      break;
+
+    default :
+      break;
+  }
+});
+
+ws.on('open', function(event) {
+  ws.send(JSON.stringify({
     'after-date': args.after_date,
     interval: 5,
     'meta-info': {
@@ -64,20 +83,7 @@ socket.on('connect', function () {
       }
     },
     'program-name': args.program_name
-  });
-  console.log('Waiting for logs....');
+  }));
+  console.log('Waiting for logs.....');
 });
 
-
-socket.on('logs', function (logs) {
-  logs.forEach(function (log) {
-    console.log(log.message);
-  });
-});
-
-socket.on('status', function (status) {
-  if (status['type'] === 'FAILED') {
-    console.log(status.description);
-    process.exit(1);
-  }
-});
