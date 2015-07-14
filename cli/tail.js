@@ -45,6 +45,14 @@ parser.addArgument(
       help: 'Log Service URL'
     }
 );
+
+parser.addArgument(
+    [ '-s', '--show-timestamp' ],
+    {
+      help: 'Show default timestamp? (true/false)'
+    }
+);
+
 var args = parser.parseArgs();
 
 var baseUrl = args.url || 'ws://localhost:9500'
@@ -57,7 +65,13 @@ ws.on('message', function(event) {
   switch (parsedEvent.type) {
     case 'LOGS':
       parsedEvent.details.logs.forEach(function (log) {
-        console.log(log.message);
+        if(args.show_timestamp) {
+          console.log(log.timestamp+' '+log.message);
+        }
+        else {
+          console.log(log.message);
+        }
+
       });
       break;
 
