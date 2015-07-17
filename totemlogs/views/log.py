@@ -68,10 +68,11 @@ def _emit_log(ws, log_request):
     after_date_str = log_request['after-date']
     page_size = log_request['page-size']
     interval = log_request['interval']
+    to_date = arrow.utcnow()
     if after_date_str:
         after_date = arrow.get(after_date_str)
     else:
-        after_date = arrow.utcnow()
+        after_date = to_date - datetime.timedelta(0, 5*60)
 
     program_name = log_request['program-name']
 
@@ -88,7 +89,7 @@ def _emit_log(ws, log_request):
                 'after-date': after_date.isoformat()
             }
         )
-        to_date = arrow.utcnow() - datetime.timedelta(0, 5*60)
+        to_date = arrow.utcnow()
 
         def fetch(from_):
             try:
