@@ -37,4 +37,5 @@ def get_search_client():
     :rtype: elasticsearch.Elasticsearch
     """
     return Elasticsearch(hosts=SEARCH_SETTINGS['host'],
-                         port=SEARCH_SETTINGS['port'])
+                         port=SEARCH_SETTINGS['port'],
+                         send_get_body_as='POST')
